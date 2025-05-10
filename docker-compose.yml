@@ -4,7 +4,7 @@ services:
         container_name: nestjs-app
         restart: always
         ports:
-            - "3000:3000"
+            - "3001:3000"
         env_file:
             - ./.env
         depends_on:
@@ -14,6 +14,7 @@ services:
             - DATABASE_URL=mysql://root:${MYSQL_ROOT_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
         networks:
             - app-network
+            - proxy_network
 
     mysql:
         image: mysql:8.0
@@ -30,18 +31,9 @@ services:
             - "3307:3306"
         networks:
             - app-network
+            - proxy_network
         healthcheck:
-            test:
-                [
-                    "CMD",
-                    "mysqladmin",
-                    "ping",
-                    "-h",
-                    "mysql",
-                    "-u",
-                    "root",
-                    "-p${MYSQL_ROOT_PASSWORD}",
-                ]
+            test: [ "CMD", "mysqladmin", "ping", "-h", "mysql", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}" ]
             interval: 5s
             timeout: 5s
             retries: 20
@@ -49,6 +41,8 @@ services:
 networks:
     app-network:
         driver: bridge
+    proxy_network:
+        external: true
 
 volumes:
     mysql-data:
