@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  password  String
+  accounts  Account[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Account {
+  id             String        @id @default(uuid())
+  accountName    String
+  accountType    AccountType
+  initialBalance Float
+  balance        Float
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  transactions   Transaction[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  type        TransactionType
+  amount      Float
+  category    Category
+  description String?
+  date        DateTime        @default(now())
+  accountId   String
+  account     Account         @relation(fields: [accountId], references: [id])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+enum AccountType {
+  BANK
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+}
+
+enum TransactionType {
+  EXPENSE
+  INCOME
+}
+
+enum Category {
+  FOOD
+  TRANSPORT
+  OTHER
+  EDUCATION
+  HEALTHCARE
+}
