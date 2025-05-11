@@ -3,8 +3,8 @@ import {
   IsEnum,
   IsNumber,
   IsOptional,
-  IsDate,
   Min,
+  IsDateString,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TransactionType, Category } from '../../domain/transaction.entity';
@@ -34,6 +34,6 @@ export class CreateTransactionDto {
 
   @ApiPropertyOptional({ description: 'Transaction date' })
   @IsOptional()
-  @IsDate()
+  @IsDateString()
   date?: Date;
 }

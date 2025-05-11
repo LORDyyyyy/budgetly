@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   Transaction,
@@ -19,7 +19,7 @@ export class PrismaTransactionRepository implements ITransactionRepository {
       !transaction.category ||
       !transaction.accountId
     ) {
-      throw new Error('Missing required fields');
+      throw new BadRequestException('Missing required fields');
     }
 
     const createdTransaction = await this.prisma.transaction.create({

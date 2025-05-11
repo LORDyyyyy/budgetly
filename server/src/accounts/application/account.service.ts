@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Account, AccountType, IAccount } from '../domain/account.entity';
 import { IAccountRepository } from '../domain/account.repository.interface';
 
@@ -40,6 +40,11 @@ export class AccountService {
     id: string,
     updates: Partial<IAccount>,
   ): Promise<Account> {
+    const account = await this.getAccountById(id);
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
     return this.accountRepository.update(id, {
       ...updates,
       updatedAt: new Date(),

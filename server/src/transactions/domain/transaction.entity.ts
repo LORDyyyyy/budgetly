@@ -1,3 +1,5 @@
+import { BadRequestException } from '@nestjs/common';
+
 export enum TransactionType {
   EXPENSE = 'EXPENSE',
   INCOME = 'INCOME',
@@ -39,13 +41,13 @@ export class Transaction implements ITransaction {
       partial.type &&
       !Object.values(TransactionType).includes(partial.type)
     ) {
-      throw new Error('Invalid transaction type');
+      throw new BadRequestException('Invalid transaction type');
     }
     if (
       partial.category &&
       !Object.values(Category).includes(partial.category)
     ) {
-      throw new Error('Invalid category');
+      throw new BadRequestException('Invalid category');
     }
     Object.assign(this, partial);
   }

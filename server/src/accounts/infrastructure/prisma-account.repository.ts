@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Account, AccountType } from '../domain/account.entity';
 import { IAccountRepository } from '../domain/account.repository.interface';
@@ -9,7 +13,7 @@ export class PrismaAccountRepository implements IAccountRepository {
 
   async create(account: Partial<Account>): Promise<Account> {
     if (!account.accountName || !account.accountType || !account.userId) {
-      throw new Error('Missing required fields');
+      throw new BadRequestException('Missing required fields');
     }
 
     const createdAccount = await this.prisma.account.create({
@@ -71,15 +75,43 @@ export class PrismaAccountRepository implements IAccountRepository {
   }
 
   async update(id: string, account: Partial<Account>): Promise<Account> {
+    // First check if the account exists
+    const existingAccount = await this.prisma.account.findUnique({
+      where: { id },
+    });
+
+    if (!existingAccount) {
+      throw new NotFoundException('Account not found');
+    }
+
+    // Create update data object with only the fields that are provided
+    const updateData: {
+      accountName?: string;
+      accountType?: AccountType;
+      balance?: number;
+      initialBalance?: number;
+    } = {};
+
+    if (account.accountName !== undefined)
+      updateData.accountName = account.accountName;
+    if (account.accountType !== undefined)
+      updateData.accountType = account.accountType;
+    if (account.balance !== undefined) {
+      updateData.balance = account.balance;
+      updateData.initialBalance = account.balance; // Update initial balance to match the new balance
+    }
+
+    // Log the update data for debugging
+    console.log('Updating account with data:', { id, updateData });
+
     const updatedAccount = await this.prisma.account.update({
       where: { id },
-      data: {
-        accountName: account.accountName,
-        accountType: account.accountType,
-        initialBalance: account.initialBalance,
-        balance: account.balance,
-      },
+      data: updateData,
     });
+
+    // Log the result for debugging
+    console.log('Updated account:', updatedAccount);
+
     return new Account({
       id: updatedAccount.id,
       accountName: updatedAccount.accountName,

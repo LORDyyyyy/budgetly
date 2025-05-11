@@ -146,6 +146,20 @@ export class TransactionController {
     return this.transactionService.getAccountTransactions(accountId);
   }
 
+  @Get('user/all')
+  @ApiOperation({ summary: 'Get all transactions for the current user' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all transactions for the user',
+    type: [Transaction],
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getUserTransactions(
+    @CurrentUser() user: { id: string },
+  ): Promise<Transaction[]> {
+    return this.transactionService.getUserTransactions(user.id);
+  }
+
   @Put(':id')
   @ApiOperation({ summary: 'Update transaction' })
   @ApiParam({ name: 'id', description: 'Transaction ID' })
@@ -199,7 +213,7 @@ export class TransactionController {
   async deleteTransaction(
     @Param('id') id: string,
     @CurrentUser() user: { id: string },
-  ): Promise<void> {
+  ): Promise<object> {
     const transaction = await this.transactionService.getTransactionById(id);
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
@@ -215,6 +229,10 @@ export class TransactionController {
       throw new ForbiddenException('Transaction does not belong to user');
     }
 
-    return this.transactionService.deleteTransaction(id);
+    await this.transactionService.deleteTransaction(id);
+
+    return {
+      message: 'Ok',
+    };
   }
 }

@@ -138,7 +138,11 @@ export class AccountController {
   })
   @ApiResponse({ status: 404, description: 'Account not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async deleteAccount(@Param('id') id: string): Promise<void> {
-    return this.accountService.deleteAccount(id);
+  async deleteAccount(@Param('id') id: string) {
+    await this.accountService.deleteAccount(id);
+
+    return {
+      message: 'Ok',
+    };
   }
 }

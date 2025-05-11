@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
   Transaction,
   TransactionType,
@@ -13,7 +13,6 @@ export class TransactionService {
   constructor(
     @Inject('ITransactionRepository')
     private readonly transactionRepository: ITransactionRepository,
-    @Inject('IAccountRepository')
     private readonly accountService: AccountService,
   ) {}
 
@@ -27,7 +26,7 @@ export class TransactionService {
   ): Promise<Transaction> {
     const account = await this.accountService.getAccountById(accountId);
     if (!account) {
-      throw new Error('Account not found');
+      throw new NotFoundException('Account not found');
     }
 
     const transaction: Partial<ITransaction> = {
@@ -72,13 +71,25 @@ export class TransactionService {
     );
   }
 
+  async getUserTransactions(userId: string): Promise<Transaction[]> {
+    const userAccounts = await this.accountService.getUserAccounts(userId);
+
+    const allTransactions = await Promise.all(
+      userAccounts.map((account) => this.getAccountTransactions(account.id)),
+    );
+
+    return allTransactions
+      .flat()
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
+
   async updateTransaction(
     id: string,
     updates: Partial<ITransaction>,
   ): Promise<Transaction> {
     const transaction = await this.transactionRepository.findById(id);
     if (!transaction) {
-      throw new Error('Transaction not found');
+      throw new NotFoundException('Transaction not found');
     }
 
     if (updates.amount || updates.type) {
@@ -86,7 +97,7 @@ export class TransactionService {
         transaction.accountId,
       );
       if (!account) {
-        throw new Error('Account not found');
+        throw new NotFoundException('Account not found');
       }
 
       const oldBalanceChange =
@@ -113,14 +124,14 @@ export class TransactionService {
   async deleteTransaction(id: string): Promise<void> {
     const transaction = await this.transactionRepository.findById(id);
     if (!transaction) {
-      throw new Error('Transaction not found');
+      throw new NotFoundException('Transaction not found');
     }
 
     const account = await this.accountService.getAccountById(
       transaction.accountId,
     );
     if (!account) {
-      throw new Error('Account not found');
+      throw new NotFoundException('Account not found');
     }
 
     const balanceChange =
